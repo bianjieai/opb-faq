@@ -12,5 +12,5 @@
   IRITA 技术文档：
   https://irita.bianjie.ai/docs/
   
-  BSN帮助手册-文昌链网关接入说明：
+  BSN用户手册-文昌链网关接入说明：
   https://bsnbase.com/static/tmpFile/bzsc/openper/7-3-1.html
