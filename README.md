@@ -18,8 +18,11 @@
   文昌链测试网浏览器：
   http://58.33.6.114:28000
   
-  Avata技术文档：
+  Avata技术文档（生产环境）：
   https://apis.avata.bianjie.ai
+  
+  Avata技术文档（测试环境）：
+  https://stage.apis.avata.bianjie.ai
   
   Avata控制台（注册入口）
   https://console.avata.bianjie.ai
