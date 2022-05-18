@@ -12,9 +12,9 @@ assignees: duanhairui,ajiang55,MaricoHan
 
 ### 环境：
 <!--
-示例:
-- OS: Ubuntu 20.04
-- Golang: 1.17
+示例：
+- OS：Ubuntu 20.04
+- Golang：1.17
 -->
 
 ### 问题描述：
@@ -25,7 +25,7 @@ assignees: duanhairui,ajiang55,MaricoHan
 
 ### 复现步骤：
 <!--
-示例: 
+示例：
 1. 在 Ubuntu 20.04 中 ...
 2. 使用这些参数 ...
 3. 调用接口 ...
