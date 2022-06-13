@@ -16,7 +16,7 @@
   https://bsnbase.com/static/tmpFile/bzsc/openper/7-3-1.html
 
   文昌链测试网浏览器：
-  http://58.33.6.114:28000
+  https://explorer.testnet.bianjie.ai
   
   Avata技术文档（生产环境）：
   https://apis.avata.bianjie.ai
