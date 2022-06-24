@@ -70,66 +70,6 @@
 ##### 对于 OPB-SDK-Go
 
 opb-sdk-go 默认做了维护 sequence （注意：不要完全信任，这个值是存在于内存中的，如果网络抖动，可能会导致 sequence 不对）可以用如下方式自己本地静态维护：
-##### 签名和广播不分开
-
-```go
-
-    // 伪代码
-    options := []types.Option{
-        types.KeyDAOOption(store.NewMemory(nil)),
-        types.FeeOption(types.NewDecCoinsFromCoins(fee)),
-        types.ModeOption(coretypes.Sync),
-    }
-    
-    //  ..... 其他掠过
-    // 创建客户端
-    client := opb.NewClient(cfg, &authToken)
-    
-    // 初始化 Tx 基础参数
-    baseTx := types.BaseTx{
-        From:     "test_key_name", // 对应上面导入的私钥名称
-        Password: "test_password", // 对应上面导入的私钥密码
-        Gas:      200000,          // 单 Tx 消耗的 Gas 上限
-        Memo:     "",              // Tx 备注
-        Mode:     types.Sync,    // Tx 广播模式
-    }
-    accountAddr := "iaa1lxvmp9h0v0dhzetmhstrmw3ecpplp5tljnr35f"
-    baseAccount, err := client.QueryAccount(accountAddr)
-    if err != nil {
-        return
-    }
-    
-    // 初始的 sequence 可以从 baseAccount 拿到
-    // 获取最新的离线的 sequence
-    sequence = getCurSequence(accountAddr)
-    
-    // 创建写入的 msgs
-    // msgs 是一个接口数组，任何文昌链的原生交易的结构都可以 append 到这个数组
-    var msgs coretypes.Msgs
-    tmpNFTID := "testnft001"
-    tmpMsg := &nft.MsgMintNFT{
-        Id:        tmpNFTID,
-        DenomId:   "testclass",
-        Name:      "testnftname",
-        URI:       "http://example.com",
-        Data:      "",
-        Sender:    accountAddr,
-        Recipient: accountAddr,
-    }
-    msgs = append(msgs, tmpMsg)
-    
-    // 签名并广播
-    result, err := client.BuildAndSend(msgs, baseTx)
-	if err != nil {
-		return
-	}
- 
-    // 更新sequence(必须等结果返回后，这个时候代表交易已经进入链的交易池子，等待被广播)
-    sequence += 1
-
-    //.....
-
-```
 
 ###### 签名和广播分开（推荐做法，和架构图一致）
 
@@ -185,16 +125,76 @@ opb-sdk-go 默认做了维护 sequence （注意：不要完全信任，这个�
     if err != nil{
         return
     }
-
+    //...
+    // 把 signTx 发到队列中（先进先出的队列）
     // 广播
+    // 注意签名和广播可以放到不同的程序中，参考架构图，
     result, err := tc.BroadcastTxSync(context.Background(), signTx)
     if err != nil{
         return
     }
-    // 注意签名和广播可以放到不同的程序中，参考架构图
  
     // 更新sequence(必须等结果返回后，这个时候代表交易已经进入链的交易池子，等待被广播)
     sequence += 1
+
+    //.....
+
+```
+
+##### 签名和广播不分开
+
+**注意：** opb-go-sdk v0.2 会自动在内存，但不要过度信任，在大多数情况下是可用的，但在网络特别差的时候可能会出现意外。
+
+```go
+
+    // 伪代码
+    options := []types.Option{
+        types.KeyDAOOption(store.NewMemory(nil)),
+        types.FeeOption(types.NewDecCoinsFromCoins(fee)),
+        types.ModeOption(coretypes.Sync),
+    }
+    
+    //  ..... 其他掠过
+    // 创建客户端
+    client := opb.NewClient(cfg, &authToken)
+    
+    // 初始化 Tx 基础参数
+    baseTx := types.BaseTx{
+        From:     "test_key_name", // 对应上面导入的私钥名称
+        Password: "test_password", // 对应上面导入的私钥密码
+        Gas:      200000,          // 单 Tx 消耗的 Gas 上限
+        Memo:     "",              // Tx 备注
+        Mode:     types.Sync,    // Tx 广播模式
+    }
+    accountAddr := "iaa1lxvmp9h0v0dhzetmhstrmw3ecpplp5tljnr35f"
+    baseAccount, err := client.QueryAccount(accountAddr)
+    if err != nil {
+        return
+    }
+    
+    // 初始的 sequence 可以从 baseAccount 拿到
+    
+    // 创建写入的 msgs
+    // msgs 是一个接口数组，任何文昌链的原生交易的结构都可以 append 到这个数组
+    var msgs coretypes.Msgs
+    tmpNFTID := "testnft001"
+    tmpMsg := &nft.MsgMintNFT{
+        Id:        tmpNFTID,
+        DenomId:   "testclass",
+        Name:      "testnftname",
+        URI:       "http://example.com",
+        Data:      "",
+        Sender:    accountAddr,
+        Recipient: accountAddr,
+    }
+    msgs = append(msgs, tmpMsg)
+    
+    // 签名并广播
+    result, err := client.BuildAndSend(msgs, baseTx)
+	if err != nil {
+		return
+	}
+    // 判断 result 没有错误在发送下一笔
 
     //.....
 
