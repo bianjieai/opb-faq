@@ -26,3 +26,6 @@
   
   Avata控制台（注册入口）
   https://console.avata.bianjie.ai
+
+  实践建议：
+  [实践建议](./practices/README.md)
