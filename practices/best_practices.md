@@ -59,7 +59,14 @@
         Mode:     types.Sync,    // Tx 广播模式
     }
 ```
+##### OPB-SDK-JAVA
 
+对于使用 opb-sdk-java 的用户在配置的时候请做如下配置：
+
+```java
+    //使用BroadcastMode.Sync 指定Sync模式
+    BaseTx baseTx = new BaseTx(200000, new Fee("200000", "ugas"), BroadcastMode.Sync);
+```
 ### 建议3: 离线维护 Sequence/Nonce 并配合 Sync 模式
 
 推荐架构如下：
@@ -142,6 +149,7 @@ opb-sdk-go 默认做了维护 sequence （注意：不要完全信任，这个�
 
 ```
 
+
 ##### 签名和广播不分开
 
 **注意：** opb-go-sdk v0.2 会自动在内存中维护账户的 sequence ，但不要过度信任，在大多数情况下是可用的，但在网络特别差的时候可能会出现意外。
@@ -200,68 +208,34 @@ opb-sdk-go 默认做了维护 sequence （注意：不要完全信任，这个�
     //.....
 
 ```
-
-### 建议4：一笔交易包含多 Msg 代替多笔交易只包含 1 个 Msg
-
-#### 概念解释：
-
-1. 交易：一笔完整的链上可执行的事务，每一笔交易必须包含大于等于 1 的 Msg；
-2. Msg：一笔交易的消息体，真正与业务相关的结构；
-
-#### 为什么要这么做？
-
-我们来模拟一个真实的场景：用户想要创建 1000 个 NFT；那么我有如下两种方案：
-
-1. 方案1：创建 1000 笔交易，每笔交易包含 1 个 NFT Msg 
-2. 方案2：创建一笔交易，此交易包含 1000 个 NFT Msg 
-
-那么那种方案更好呢？答案是：方案2。这是因为：**每笔交易上链后都需要进行交易的验证**，方案2 比 方案1 少执行了 999 次的交易验证，在性能上更加优秀，交易速度更快。
-
-#### 示例
-##### 对于 OPB-SDK-Go
-
-一笔交易多 Msg 的示例：把上述的建议3的代码示例稍为改造一下：
-
-```go
-    // ....
-    
-    // 创建写入的 msgs
-    // msgs 是一个接口数组，任何文昌链的原生交易的结构都可以 append 到这个数组
-    var msgs coretypes.Msgs
-    for i:=0; i< 1000; i++{
-        tmpNFTID := fmt.Sprintf("testnft%d",  i)
-        tmpMsg := &nft.MsgMintNFT{
-            Id:        tmpNFTID,
-            DenomId:   "testclass",
-            Name:      "testnftname",
-            URI:       "http://example.com",
-            Data:      "",
-            Sender:    accountAddr,
-            Recipient: accountAddr,
-        }
-        msgs = append(msgs, tmpMsg)
-    }
-     
-    // 签名
-    signTx, err := client.BuildAndSignWithAccount(feeGraterAddr, baseAccount.AccountNumber, sequence, msgs, baseTx)
-
-    if err != nil{
-        return
-    }
-
-    // 广播
-    result, err := tc.BroadcastTxSync(context.Background(), signTx)
-    if err != nil{
-        return
-    }
-    // 注意签名和广播可以放到不同的程序中，参考架构图
- 
-    // 更新sequence(必须等结果返回后，这个时候代表交易已经进入链的交易池子，等待被广播)
-    sequence += 1
-    //....
+##### 对于 OPB-SDK-JAVA
+```java
+        //指定Sync模式
+        BaseTx baseTx = new BaseTx(200000, new Fee("200000", "ugas"), BroadcastMode.Sync);
+        Account account = baseClient.queryAccount(baseTx);
+		
+        //获取sequence
+        // 初始的 sequence 可以从 baseAccount 拿到
+        // 获取最新的离线的 sequence
+        long sequence = account.getSequence();
+        // 创建写入的 msgs	
+        Tx.MsgMintMT.Builder mintMTBuilder = Tx.MsgMintMT
+                .newBuilder()
+                .setDenomId(denomId)
+                .setAmount(20)
+                .setData(ByteString.copyFrom(data.getBytes()))
+                .setSender(account.getAddress());
+        mintMTBuilder.setRecipient(recipient);
+        Tx.MsgMintMT msgMintMT = mintMTBuilder.build();
+        List<GeneratedMessageV3> msgs2 = Collections.singletonList(mintMT2);
+        //签名 广播交易
+        ResultTx resultTx2 =  baseClient.buildAndSend(msgs2, baseTx, account);
+        // 更新sequence(必须等结果返回后，这个时候代表交易已经进入链的交易池子，等待被广播)
+        sequence += 1
+        //.....
 ```
 
-### 建议5：对于 EVM 交易和 DDC 的并发交易必须离线维护 Nonce
+### 建议4：对于 EVM 交易和 DDC 的并发交易必须离线维护 Nonce
 
 **所有的交易是由全节点接收的。** 
 当区块链网络的压力比较大时，全节点的交易可能无法被及时的 广播到共识节点，如果不离线维护 Nonce 值，可能会导致出现一些关于 Nonce 值的错误；
