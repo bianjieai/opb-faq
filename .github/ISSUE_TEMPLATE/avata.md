@@ -3,7 +3,7 @@ name: Avata API
 about: Avata API 接入问答、问题反馈
 title: "[Avata]: [标题]"
 labels: Avata
-assignees: duanhairui,ajiang55,MaricoHan
+assignees: duanhairui,ajiang55,MaricoHan,deadfiish
 ---
 
 <!--
