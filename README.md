@@ -5,6 +5,10 @@
   
   文昌链浏览器：
   https://explorer.wenchang.bianjie.ai/
+   - 文昌链-天和：
+  https://tianhe.wenchang.bianjie.ai/
+  - 文昌链-天舟：
+  https://tianzhou.wenchang.bianjie.ai/
   
   文昌链开发配置文档：
   https://wenchang.bianjie.ai/wenchangchain.html
